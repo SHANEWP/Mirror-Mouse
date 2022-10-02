@@ -11,13 +11,16 @@ import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
 import com.github.kwhat.jnativehook.mouse.NativeMouseEvent;
 import com.github.kwhat.jnativehook.mouse.NativeMouseMotionListener;
+import com.github.kwhat.jnativehook.mouse.NativeMouseListener;
 
-public class Server implements NativeKeyListener, NativeMouseMotionListener {
+public class Server implements NativeKeyListener, NativeMouseMotionListener, NativeMouseListener {
     private Socket socket;
     private ServerSocket serverSocket;
     private DataOutputStream output;
     private int mousePositionX;
     private int mousePositionY;
+    private boolean switchPressed;
+    private static final int SWITCH_BTN = NativeKeyEvent.VC_META;//CMD
 
     public Server(int port) {
         try {
@@ -30,39 +33,74 @@ public class Server implements NativeKeyListener, NativeMouseMotionListener {
 
             output = new DataOutputStream(socket.getOutputStream());
 
+            switchPressed = false;
             mousePositionX = 0;
             mousePositionY = 0;
 
             GlobalScreen.registerNativeHook();
             GlobalScreen.addNativeKeyListener(this);
             GlobalScreen.addNativeMouseMotionListener(this);
+            GlobalScreen.addNativeMouseListener(this);
         } catch (IOException | NativeHookException e) {
             System.out.println(e);
         }
     }
     
     @Override
-    public void nativeKeyPressed(NativeKeyEvent e) {
-        try {
-            output.writeUTF(mousePositionX+","+mousePositionY+",kp,"+e.getKeyCode());
-            System.out.println(e.getKeyCode());
-        } catch (IOException e1) {
-            System.out.println(e);
-        }
-    }
-
-    @Override
     public void nativeMouseMoved(NativeMouseEvent e) {
         mousePositionX = e.getX();
         mousePositionY = e.getY();
         System.out.println("(" + mousePositionX + ", " + mousePositionY + ")");
-        
     }
 
     @Override
-    public void nativeMouseDragged(NativeMouseEvent e) { /* TODO */ }
+    public void nativeKeyPressed(NativeKeyEvent e) {
+        if(e.getKeyCode() == SWITCH_BTN) {
+            switchPressed = true;
+        }
+        if(switchToClient(e.getKeyCode())) {
+            writeOutput("kp", e.getKeyCode());
+        } 
+    }
     @Override
-    public void nativeKeyReleased(NativeKeyEvent e) { /* TODO */ }
+    public void nativeKeyReleased(NativeKeyEvent e) {
+        if(e.getKeyCode() == SWITCH_BTN) {
+            switchPressed = false;
+        }
+        if(switchToClient(e.getKeyCode())) {
+            writeOutput("kr", e.getKeyCode()); 
+        }
+    }
+    @Override 
+    public void nativeMouseClicked(NativeMouseEvent e) {
+        if(switchToClient(e.getButton())) {
+            writeOutput("mc", e.getButton());
+        }
+    }
+    @Override
+    public void nativeMousePressed(NativeMouseEvent e) { 
+        if(switchToClient(e.getButton())) {
+            writeOutput("mp", e.getButton());
+        } 
+    }
+    
     @Override
     public void nativeKeyTyped(NativeKeyEvent e) { /* TODO */ }
+    @Override
+    public void nativeMouseReleased(NativeMouseEvent e) { /*TODO */ }
+    @Override
+    public void nativeMouseDragged(NativeMouseEvent e) { /* TODO */ }
+
+    private void writeOutput(String action, int code) {
+        try {
+            output.writeUTF(mousePositionX + "," + mousePositionY + "," + action + "," + code);
+            System.out.println(code);
+        } catch (IOException e1) {
+            System.out.println(e1);
+        }
+    }
+
+    private boolean switchToClient(int code) {
+        return switchPressed && code != SWITCH_BTN;
+    }
 }
