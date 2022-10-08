@@ -10,10 +10,11 @@ import java.net.Socket;
 
 public class Client {
     private Socket socket;
-    private String line;
+    private String line = "";
     private DataInputStream input;
     private String[] data;
     private Robot robot;
+    private int focusButton = 0;
 
     public Client(String address, int port) {
         try {
@@ -26,15 +27,27 @@ public class Client {
             System.out.println(e);
         }
 
-        line = "";
+        run(); 
+    }
 
+    private void run() {
         while (line != null) {
             try {
                 line = input.readUTF();
                 data = line.split(",");
-                int code = Integer.parseInt(data[3]);
-                robot.mouseMove(Integer.parseInt(data[0]), Integer.parseInt(data[1]));
-                switch(data[2]) {
+
+                focusButton = CodeConversions.getKeyConversion(Integer.parseInt(data[0]));
+                
+                if(!data[0].equals("-1")) {
+                    robot.keyPress(focusButton);
+                } else {
+                    robot.keyRelease(focusButton);
+                }
+
+                robot.mouseMove((int)(Double.parseDouble(data[1]) + 0.5), (int)(Double.parseDouble(data[2]) + 0.5));
+
+                int code = Integer.parseInt(data[4]);
+                switch(data[3]) {
                     case "kp": 
                         robot.keyPress(CodeConversions.getKeyConversion(code));
                         break;
@@ -47,14 +60,14 @@ public class Client {
                     default:
                         break;
                 }
-                System.out.println("x: "+data[0]+", y: "+data[1]+", action: "+ data[2]+", key: "+data[3]);
+                System.out.println("~:" + data[0] + "x: "+data[1]+", y: "+data[2]+", action: "+ data[3]+", key: "+data[4]);
             } catch (IOException e) {
                 System.out.println(e);
                 System.exit(-1);
             }
-        } 
+        }
     }
-
+    
     private void mouseAction(int code) {
         switch(code) {
             case 1:

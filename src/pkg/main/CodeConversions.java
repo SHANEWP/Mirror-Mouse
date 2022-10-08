@@ -5,6 +5,9 @@ public class CodeConversions {
 
     public static int getKeyConversion (int code) {
         switch(code) {
+            case 0x0029: // `
+                return 192;
+
             case 0x000B: //0
                 return 48;
             case 0x0002: //1

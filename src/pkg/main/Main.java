@@ -11,7 +11,7 @@ public class Main {
         if(userType.equalsIgnoreCase("s")) {
             new Server(1111);
         } else if(userType.equalsIgnoreCase("c")) {
-            new Client("192.168.1.160", 1111);
+            new Client("10.0.0.203", 1111);
         } else {
             System.out.println("Invalid response");
         }

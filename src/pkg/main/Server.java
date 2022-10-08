@@ -1,5 +1,6 @@
 package pkg.main;
 
+import java.awt.Point;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -17,10 +18,17 @@ public class Server implements NativeKeyListener, NativeMouseMotionListener, Nat
     private Socket socket;
     private ServerSocket serverSocket;
     private DataOutputStream output;
-    private int mousePositionX;
-    private int mousePositionY;
-    private boolean switchPressed;
-    private static final int SWITCH_BTN = NativeKeyEvent.VC_META;//CMD
+    private int mousePositionX = 0;
+    private int mousePositionY = 0;
+    private boolean switchPressed = false;
+    private boolean focusToggle = false;
+    private String focusButtonString = "";
+    private static final int SWITCH_BUTTON = NativeKeyEvent.VC_META;//CMD
+    private static final int FOCUS_BUTTON = NativeKeyEvent.VC_BACKQUOTE; // `
+    private static final Point SERVER_RESOLUTION = new Point(2560, 1600);
+    private static final Point CLIENT_RESOLUTION = new Point(2560, 1600);
+    private static final double RESOLUTION_X_RATIO = CLIENT_RESOLUTION.getX() / SERVER_RESOLUTION.getX();
+    private static final double RESOLUTION_Y_RATIO = CLIENT_RESOLUTION.getY() / SERVER_RESOLUTION.getY();
 
     public Server(int port) {
         try {
@@ -32,11 +40,7 @@ public class Server implements NativeKeyListener, NativeMouseMotionListener, Nat
             System.out.println("Client accepted");
 
             output = new DataOutputStream(socket.getOutputStream());
-
-            switchPressed = false;
-            mousePositionX = 0;
-            mousePositionY = 0;
-
+            
             GlobalScreen.registerNativeHook();
             GlobalScreen.addNativeKeyListener(this);
             GlobalScreen.addNativeMouseMotionListener(this);
@@ -55,8 +59,11 @@ public class Server implements NativeKeyListener, NativeMouseMotionListener, Nat
 
     @Override
     public void nativeKeyPressed(NativeKeyEvent e) {
-        if(e.getKeyCode() == SWITCH_BTN) {
+        if(e.getKeyCode() == SWITCH_BUTTON) {
             switchPressed = true;
+        }
+        if(e.getKeyCode() == FOCUS_BUTTON) {
+            focusToggle = !focusToggle;
         }
         if(switchToClient(e.getKeyCode())) {
             writeOutput("kp", e.getKeyCode());
@@ -64,7 +71,7 @@ public class Server implements NativeKeyListener, NativeMouseMotionListener, Nat
     }
     @Override
     public void nativeKeyReleased(NativeKeyEvent e) {
-        if(e.getKeyCode() == SWITCH_BTN) {
+        if(e.getKeyCode() == SWITCH_BUTTON) {
             switchPressed = false;
         }
         if(switchToClient(e.getKeyCode())) {
@@ -87,13 +94,21 @@ public class Server implements NativeKeyListener, NativeMouseMotionListener, Nat
     @Override
     public void nativeKeyTyped(NativeKeyEvent e) { /* TODO */ }
     @Override
-    public void nativeMouseReleased(NativeMouseEvent e) { /*TODO */ }
+    public void nativeMouseReleased(NativeMouseEvent e) { /* TODO */ }
     @Override
     public void nativeMouseDragged(NativeMouseEvent e) { /* TODO */ }
 
     private void writeOutput(String action, int code) {
         try {
-            output.writeUTF(mousePositionX + "," + mousePositionY + "," + action + "," + code);
+            if (focusToggle) {
+                focusButtonString = String.valueOf(FOCUS_BUTTON);
+            } else {
+                focusButtonString = "-1";
+            }
+            output.writeUTF( focusButtonString + "," +
+                (mousePositionX * RESOLUTION_X_RATIO) + "," + 
+                (mousePositionY * RESOLUTION_Y_RATIO) + "," + 
+                action + "," + code);
             System.out.println(code);
         } catch (IOException e1) {
             System.out.println(e1);
@@ -101,6 +116,6 @@ public class Server implements NativeKeyListener, NativeMouseMotionListener, Nat
     }
 
     private boolean switchToClient(int code) {
-        return switchPressed && code != SWITCH_BTN;
+        return switchPressed && code != SWITCH_BUTTON;
     }
 }
