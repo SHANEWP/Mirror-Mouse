@@ -27,8 +27,6 @@ public class Server implements NativeKeyListener, NativeMouseMotionListener, Nat
     private String focusButtonString = "";
     private static final int SWITCH_BUTTON = NativeKeyEvent.VC_META;//CMD
     private static final int FOCUS_BUTTON = NativeKeyEvent.VC_BACKQUOTE; // `
-    private static final int MOUSE_UPDATE_DELAY = 0;
-    private static final int MOUSE_UPDATE_INTERVAL = 80;
     private static final Point SERVER_RESOLUTION = new Point(2560, 1600);
     private static final Point CLIENT_RESOLUTION = new Point(2560, 1600);
     private static final double RESOLUTION_X_RATIO = CLIENT_RESOLUTION.getX() / SERVER_RESOLUTION.getX();
@@ -49,16 +47,6 @@ public class Server implements NativeKeyListener, NativeMouseMotionListener, Nat
             GlobalScreen.addNativeKeyListener(this);
             GlobalScreen.addNativeMouseMotionListener(this);
             GlobalScreen.addNativeMouseListener(this);
-            
-            new Timer().scheduleAtFixedRate(
-                new TimerTask() {
-                    int count = 0;
-                    @Override
-                    public void run() {
-                        writeOutput("mm", -1);
-                    }
-                }, MOUSE_UPDATE_DELAY, MOUSE_UPDATE_INTERVAL);
-
         } catch (IOException | NativeHookException e) {
             System.out.println(e);
         }
