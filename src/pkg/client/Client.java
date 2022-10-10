@@ -1,4 +1,4 @@
-package pkg.main;
+package pkg.client;
 
 import java.awt.AWTException;
 import java.awt.Robot;
@@ -7,6 +7,8 @@ import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
+
+import pkg.utility.CodeConversions;
 
 public class Client {
     private Socket socket;

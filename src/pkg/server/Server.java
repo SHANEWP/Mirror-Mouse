@@ -1,4 +1,4 @@
-package pkg.main;
+package pkg.server;
 
 import java.awt.Point;
 import java.io.DataOutputStream;

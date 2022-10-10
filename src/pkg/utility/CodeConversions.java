@@ -1,4 +1,4 @@
-package pkg.main;
+package pkg.utility;
 
 public class CodeConversions {
     public CodeConversions() {}
